@@ -14,16 +14,24 @@ import openfl.Assets;
 
 class GameScene extends Scene
 {
-    private var level:Level;
+    private var player:Player;
+    private var spawner:Alarm;
 
     override public function begin() {
-        level = add(new Level("level"));
-        for(entity in level.entities) {
-            add(entity);
-        }
+        player = add(new Player(HXP.width / 2, HXP.height / 2));
+        spawner = new Alarm(0.07, function() {
+            var raindrop = new Raindrop(0, -10);
+            raindrop.x = (HXP.width - raindrop.width) * Random.random;
+            add(raindrop);
+        }, TweenType.Looping);
+        addTween(spawner, true);
     }
 
     override public function update() {
         super.update();
+    }
+
+    public function onDeath() {
+        HXP.scene = new GameScene();
     }
 }
