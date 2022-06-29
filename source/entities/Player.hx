@@ -11,8 +11,11 @@ import scenes.*;
 
 class Player extends Entity
 {
-    public static inline var ACCEL = 600*2;
+    public static inline var ACCEL = 1200;
     public static inline var MAX_SPEED = 100;
+    public static inline var MAX_FALL_SPEED = 80;
+    public static inline var BOOST_POWER = 500;
+    public static inline var GRAVITY = 300;
 
     private var sprite:Image;
     private var velocity:Vector2;
@@ -44,18 +47,25 @@ class Player extends Entity
 
         sprite.angle = MathUtil.approach(sprite.angle, angleTarget, HXP.elapsed * 200);
 
+        //if(Input.check("up")) {
+            //velocity.y -= ACCEL * HXP.elapsed;
+        //}
+        //else if(Input.check("down")) {
+            //velocity.y += ACCEL * HXP.elapsed;
+        //}
+        //else {
+            //velocity.y = MathUtil.approach(velocity.y, 0, ACCEL * HXP.elapsed);
+        //}
+        velocity.x = MathUtil.clamp(velocity.x, -MAX_SPEED, MAX_SPEED);
+        velocity.y = MathUtil.clamp(velocity.y, -MAX_SPEED, MAX_FALL_SPEED);
+        //if(velocity.length > MAX_SPEED) {
+            //velocity.normalize(MAX_SPEED);
+        //}
+
         if(Input.check("up")) {
-            velocity.y -= ACCEL * HXP.elapsed;
+            velocity.y -= BOOST_POWER * HXP.elapsed;
         }
-        else if(Input.check("down")) {
-            velocity.y += ACCEL * HXP.elapsed;
-        }
-        else {
-            velocity.y = MathUtil.approach(velocity.y, 0, ACCEL * HXP.elapsed);
-        }
-        if(velocity.length > MAX_SPEED) {
-            velocity.normalize(MAX_SPEED);
-        }
+        velocity.y += GRAVITY * HXP.elapsed;
         moveBy(velocity.x * HXP.elapsed, velocity.y * HXP.elapsed);
         x = MathUtil.clamp(x, 0, HXP.width - width);
         y = MathUtil.clamp(y, 0, HXP.height - height);

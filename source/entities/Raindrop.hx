@@ -14,8 +14,8 @@ class Raindrop extends Entity
     public static inline var MIN_SPEED = 75;
     public static inline var MAX_SPEED = 125;
 
-    private var sprite:Image;
-    private var velocity:Vector2;
+    public var sprite:Image;
+    public var velocity:Vector2;
 
     public function new(x:Float, y:Float) {
         super(x, y);
@@ -23,7 +23,7 @@ class Raindrop extends Entity
         mask = new Hitbox(5, 10);
         sprite = new Image("graphics/raindrop.png");
         graphic = sprite;
-        velocity = new Vector2(HXP.choose(0, -10, 10, -20, 20), MathUtil.lerp(MIN_SPEED, MAX_SPEED, Random.random));
+        velocity = new Vector2(HXP.choose(0, 0, -10, 10, -20, 20), MathUtil.lerp(MIN_SPEED, MAX_SPEED, Random.random));
         sprite.angle = velocity.x;
     }
 

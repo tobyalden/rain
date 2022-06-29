@@ -19,10 +19,16 @@ class GameScene extends Scene
 
     override public function begin() {
         player = add(new Player(HXP.width / 2, HXP.height / 2));
-        spawner = new Alarm(0.07, function() {
+        spawner = new Alarm(0.1, function() {
             var raindrop = new Raindrop(0, -10);
             raindrop.x = (HXP.width - raindrop.width) * Random.random;
             add(raindrop);
+            //var aimdrop = new Raindrop(0, -10);
+            //aimdrop.x = (HXP.width - aimdrop.width) * Random.random;
+            //aimdrop.velocity = new Vector2(player.centerX - aimdrop.centerX, player.centerY - aimdrop.centerY);
+            //aimdrop.velocity.normalize(MathUtil.lerp(Raindrop.MIN_SPEED, Raindrop.MAX_SPEED, Random.random));
+            //aimdrop.sprite.angle = aimdrop.velocity.x;
+            //add(aimdrop);
         }, TweenType.Looping);
         addTween(spawner, true);
     }
