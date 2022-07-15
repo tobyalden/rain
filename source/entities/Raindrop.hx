@@ -34,6 +34,9 @@ class Raindrop extends Entity
         moveBy(
             velocity.x * HXP.elapsed, velocity.y * HXP.elapsed, ["walls"]
         );
+        if(y > HXP.height) {
+            HXP.scene.remove(this);
+        }
         super.update();
     }
 }

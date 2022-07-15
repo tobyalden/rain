@@ -42,6 +42,7 @@ class Player extends Entity
 
         if(Input.check("up")) {
             velocity.y -= BOOST_POWER * HXP.elapsed;
+
             if(!hasMoved) {
                 cast(HXP.scene, GameScene).onStart();
                 hasMoved = true;
@@ -73,17 +74,65 @@ class Player extends Entity
 
         moveBy(velocity.x * HXP.elapsed, velocity.y * HXP.elapsed);
         if(collide("hazard", x, y) != null) {
-            die();
+            die(false);
         }
         if(x < -width || x > HXP.width || y < -height || y > HXP.height) {
-            die();
+            die(true);
         }
+
+        if(Input.check("up")) {
+            var particleVelocity = new Vector2(0.5 - Math.random(), 1);
+            particleVelocity.normalize(0.1);
+            var particle = new Particle(
+                centerX,
+                bottom - 2,
+                particleVelocity,
+                MathUtil.lerp(0.5, 1, Math.random()),
+                MathUtil.lerp(0.5, 1, Math.random())
+            );
+            HXP.scene.add(particle);
+        }
+
         super.update();
     }
 
-    public function die() {
+    public function die(quiet:Bool) {
         isDead = true;
         visible = false;
+        if(!quiet) {
+            explode();
+            //sfx["die"].play(0.5);
+        }
         cast(HXP.scene, GameScene).onDeath();
+    }
+
+    private function explode() {
+        var numExplosions = 50;
+        var directions = new Array<Vector2>();
+        for(i in 0...numExplosions) {
+            var angle = (2/numExplosions) * i;
+            directions.push(new Vector2(Math.cos(angle), Math.sin(angle)));
+            directions.push(new Vector2(-Math.cos(angle), Math.sin(angle)));
+            directions.push(new Vector2(Math.cos(angle), -Math.sin(angle)));
+            directions.push(new Vector2(-Math.cos(angle), -Math.sin(angle)));
+        }
+        var count = 0;
+        for(direction in directions) {
+            direction.scale(0.8 * Math.random());
+            direction.normalize(
+                Math.max(0.1 + 0.2 * Math.random(), direction.length)
+            );
+            var explosion = new Particle(
+                centerX, centerY, directions[count], 1, 1
+            );
+            explosion.layer = -99;
+            HXP.scene.add(explosion);
+            count++;
+        }
+
+#if desktop
+        Sys.sleep(0.02);
+#end
+        HXP.scene.camera.shake(1, 4);
     }
 }
