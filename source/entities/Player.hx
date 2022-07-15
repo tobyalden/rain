@@ -18,12 +18,13 @@ class Player extends Entity
     public static inline var GRAVITY = 300;
 
     public var hasMoved(default, null):Bool;
+    public var isDead(default, null):Bool;
     private var sprite:Image;
     private var velocity:Vector2;
 
     public function new(x:Float, y:Float) {
         super(x, y);
-        mask = new Hitbox(1, 2);
+        mask = new Hitbox(5, 10);
         sprite = new Image("graphics/player.png");
         sprite.centerOrigin();
         sprite.x += width / 2;
@@ -31,9 +32,14 @@ class Player extends Entity
         graphic = sprite;
         velocity = new Vector2();
         hasMoved = false;
+        isDead = false;
     }
 
     override public function update() {
+        if(isDead) {
+            return;
+        }
+
         if(Input.check("up")) {
             velocity.y -= BOOST_POWER * HXP.elapsed;
             if(!hasMoved) {
@@ -66,15 +72,18 @@ class Player extends Entity
         velocity.y = MathUtil.clamp(velocity.y, -MAX_SPEED, MAX_FALL_SPEED);
 
         moveBy(velocity.x * HXP.elapsed, velocity.y * HXP.elapsed);
-        x = MathUtil.clamp(x, 0, HXP.width - width);
-        y = MathUtil.clamp(y, 0, HXP.height - height);
         if(collide("hazard", x, y) != null) {
+            die();
+        }
+        if(x < -width || x > HXP.width || y < -height || y > HXP.height) {
             die();
         }
         super.update();
     }
 
     public function die() {
+        isDead = true;
+        visible = false;
         cast(HXP.scene, GameScene).onDeath();
     }
 }

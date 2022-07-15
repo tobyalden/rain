@@ -22,6 +22,9 @@ class Raindrop extends Entity
         type = "hazard";
         mask = new Hitbox(5, 10);
         sprite = new Image("graphics/raindrop.png");
+        sprite.centerOrigin();
+        sprite.x += width / 2;
+        sprite.y += height / 2;
         graphic = sprite;
         velocity = new Vector2(HXP.choose(0, 0, -10, 10, -20, 20), MathUtil.lerp(MIN_SPEED, MAX_SPEED, Random.random));
         sprite.angle = velocity.x;

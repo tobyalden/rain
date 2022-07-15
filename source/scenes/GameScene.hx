@@ -22,17 +22,24 @@ class GameScene extends Scene
     public static var highScore:Float;
     public static var sfx:Map<String, Sfx> = null;
 
+    public var curtain(default, null):Curtain;
     private var player:Player;
     private var spawner:Alarm;
     private var scoreDisplay:Text;
     private var titleDisplay:Text;
     private var tutorialDisplay:Text;
+    private var replayPrompt:Text;
+    private var colorChanger:ColorTween;
+    private var canReset:Bool;
 
     override public function begin() {
         Data.load("rain");
         totalTime = 0;
         highScore = Data.read("highscore", 0);
-        trace('high score: $highScore');
+
+        curtain = add(new Curtain());
+        curtain.fadeOut(0.25);
+
         player = add(new Player(HXP.width / 2, HXP.height / 2));
         spawner = new Alarm(1, function() {
             var raindrop = new Raindrop(0, -10);
@@ -45,13 +52,27 @@ class GameScene extends Scene
             ));
         }, TweenType.Looping);
         addTween(spawner);
-        scoreDisplay = new Text("0", 0, 0, 180, 0, {align: TextAlignType.CENTER});
+        scoreDisplay = new Text("0", 0, 0, 180, 0);
         scoreDisplay.alpha = 0;
         titleDisplay = new Text("Rain", 0, 60, 180, 0, {align: TextAlignType.CENTER});
         tutorialDisplay = new Text("Hold up key to fly", 0, 100, 180, 0, {align: TextAlignType.CENTER});
         for(display in [scoreDisplay, titleDisplay, tutorialDisplay]) {
             addGraphic(display);
         }
+
+        replayPrompt = new Text("NEW RECORD");
+        replayPrompt.x = 10;
+        replayPrompt.y = HXP.height - replayPrompt.textHeight - 10;
+        replayPrompt.alpha = 0;
+        addGraphic(replayPrompt, -10);
+
+        colorChanger = new ColorTween(TweenType.PingPong);
+        colorChanger.tween(0.25, 0xFF2000, 0xFFFB6E, Ease.sineInOut);
+        addTween(colorChanger, true);
+
+        canReset = false;
+
+        addGraphic(new Image("graphics/background.png"), 10);
 
         if(sfx == null) {
             sfx = [
@@ -79,14 +100,27 @@ class GameScene extends Scene
     }
 
     override public function update() {
-        if(player.hasMoved) {
-            scoreDisplay.text = '${timeRound(totalTime, 0)}';
+        if(player.isDead) {
+            if(Input.pressed("up") && canReset) {
+                reset();
+            }
+            if(totalTime > highScore) {
+                replayPrompt.text = "NEW RECORD";
+                replayPrompt.color = colorChanger.color;
+            }
+            else {
+                replayPrompt.text = 'RECORD: ${timeRound(highScore, 2)}';
+            }
+        }
+        else if(player.hasMoved) {
             var oldTotalTime = totalTime;
             totalTime += HXP.elapsed;
             if(totalTime > highScore && oldTotalTime <= highScore && highScore != 0) {
                 scoreDisplay.alpha = 1;
-                sfx["ping1"].play(0.15);
+                sfx["ping1"].play();
             }
+            scoreDisplay.text = '${timeRound(totalTime, 0)}';
+            scoreDisplay.x = HXP.width / 2 - scoreDisplay.textWidth / 2;
         }
         super.update();
     }
@@ -100,15 +134,41 @@ class GameScene extends Scene
     }
 
     public function onDeath() {
+        spawner.active = false;
+        HXP.tween(scoreDisplay, {"y": HXP.height / 2 - scoreDisplay.height / 2, "alpha": 1}, 1.5, {ease: Ease.sineInOut, complete: function() {
+            scoreDisplay.text = '${timeRound(totalTime, 2)}\n  SECONDS';
+            if(totalTime > highScore) {
+                replayPrompt.alpha = 1;
+                sfx["ping2"].play();
+            }
+            else {
+                sfx["ping3"].play();
+                HXP.tween(
+                    replayPrompt,
+                    { "alpha": 1 },
+                    0.25,
+                    {ease: Ease.sineInOut, complete: function() {
+                        canReset = true;
+                    }}
+                );
+            }
+        }});
         if(totalTime > highScore) {
             Data.write("highscore", totalTime);
             Data.save("rain");
         }
-        HXP.scene = new GameScene();
+    }
+
+    public function reset() {
+        canReset = false;
+        curtain.fadeIn(0.25);
+        HXP.alarm(0.25, function() {
+            HXP.scene = new GameScene();
+        });
     }
 
     private function timeRound(number:Float, precision:Int = 2) {
         number *= Math.pow(10, precision);
-        return Math.round(number) / Math.pow(10, precision);
+        return Math.floor(number) / Math.pow(10, precision);
     }
 }
