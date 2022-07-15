@@ -26,7 +26,7 @@ class Main extends Engine
         Key.define("down", [Key.S, Key.DOWN]);
         Key.define("left", [Key.A, Key.LEFT]);
         Key.define("right", [Key.D, Key.RIGHT]);
-
+        Key.define("reset", [Key.W, Key.UP, Key.SPACE, Key.ENTER]);
         if(Gamepad.gamepad(0) != null) {
             defineGamepadInputs(Gamepad.gamepad(0));
         }
@@ -39,6 +39,7 @@ class Main extends Engine
     }
 
     private function defineGamepadInputs(gamepad) {
+        gamepad.defineButton("reset", [XboxGamepad.A_BUTTON]);
         gamepad.defineButton("up", [XboxGamepad.DPAD_UP]);
         gamepad.defineButton("down", [XboxGamepad.DPAD_DOWN]);
         gamepad.defineButton("left", [XboxGamepad.DPAD_LEFT]);

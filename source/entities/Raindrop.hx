@@ -22,6 +22,7 @@ class Raindrop extends Entity
         type = "hazard";
         mask = new Hitbox(5, 10);
         sprite = new Image("graphics/raindrop.png");
+        sprite.alpha = 0.8;
         sprite.centerOrigin();
         sprite.x += width / 2;
         sprite.y += height / 2;

@@ -17,6 +17,8 @@ class Player extends Entity
     public static inline var BOOST_POWER = 500;
     public static inline var GRAVITY = 300;
 
+    public static var sfx:Map<String, Sfx> = null;
+
     public var hasMoved(default, null):Bool;
     public var isDead(default, null):Bool;
     private var sprite:Image;
@@ -33,6 +35,14 @@ class Player extends Entity
         velocity = new Vector2();
         hasMoved = false;
         isDead = false;
+        if(sfx == null) {
+            sfx = [
+                "die" => new Sfx("audio/die.ogg"),
+                "flight" => new Sfx("audio/flight.ogg"),
+                "flight_off" => new Sfx("audio/flight_off.ogg"),
+                "flight_on" => new Sfx("audio/flight_on.ogg")
+            ];
+        }
     }
 
     override public function update() {
@@ -42,7 +52,6 @@ class Player extends Entity
 
         if(Input.check("up")) {
             velocity.y -= BOOST_POWER * HXP.elapsed;
-
             if(!hasMoved) {
                 cast(HXP.scene, GameScene).onStart();
                 hasMoved = true;
@@ -73,14 +82,12 @@ class Player extends Entity
         velocity.y = MathUtil.clamp(velocity.y, -MAX_SPEED, MAX_FALL_SPEED);
 
         moveBy(velocity.x * HXP.elapsed, velocity.y * HXP.elapsed);
-        if(collide("hazard", x, y) != null) {
-            die(false);
-        }
-        if(x < -width || x > HXP.width || y < -height || y > HXP.height) {
-            die(true);
-        }
 
-        if(Input.check("up")) {
+        // Particles and sound
+        if(Input.pressed("up")) {
+            sfx["flight_on"].play();
+        }
+        else if(Input.check("up")) {
             var particleVelocity = new Vector2(0.5 - Math.random(), 1);
             particleVelocity.normalize(0.1);
             var particle = new Particle(
@@ -91,6 +98,23 @@ class Player extends Entity
                 MathUtil.lerp(0.5, 1, Math.random())
             );
             HXP.scene.add(particle);
+            if(!sfx["flight"].playing) {
+                sfx["flight"].loop(0.25);
+            }
+        }
+        else {
+            sfx["flight"].stop();
+        }
+        if(Input.released("up")) {
+            sfx["flight_off"].play();
+        }
+
+        // Handle death
+        if(collide("hazard", x, y) != null) {
+            die(false);
+        }
+        if(x < -width || x > HXP.width || y < -height || y > HXP.height) {
+            die(true);
         }
 
         super.update();
@@ -101,8 +125,9 @@ class Player extends Entity
         visible = false;
         if(!quiet) {
             explode();
-            //sfx["die"].play(0.5);
+            sfx["die"].play();
         }
+        sfx["flight"].stop();
         cast(HXP.scene, GameScene).onDeath();
     }
 

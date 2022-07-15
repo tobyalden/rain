@@ -31,6 +31,10 @@ class GameScene extends Scene
     private var replayPrompt:Text;
     private var colorChanger:ColorTween;
     private var canReset:Bool;
+    private var clouds:Backdrop;
+    private var cloudsTwo:Backdrop;
+    private var lowDroneStarter:Alarm;
+    private var highDroneStarter:Alarm;
 
     override public function begin() {
         Data.load("rain");
@@ -54,8 +58,8 @@ class GameScene extends Scene
         addTween(spawner);
         scoreDisplay = new Text("0", 0, 0, 180, 0);
         scoreDisplay.alpha = 0;
-        titleDisplay = new Text("Rain", 0, 60, 180, 0, {align: TextAlignType.CENTER});
-        tutorialDisplay = new Text("Hold up key to fly", 0, 100, 180, 0, {align: TextAlignType.CENTER});
+        titleDisplay = new Text("RAIN", 0, 60, 180, 0, {align: TextAlignType.CENTER});
+        tutorialDisplay = new Text("hold up to fly", 0, 103, 180, 0, {align: TextAlignType.CENTER, size: 12});
         for(display in [scoreDisplay, titleDisplay, tutorialDisplay]) {
             addGraphic(display);
         }
@@ -72,11 +76,18 @@ class GameScene extends Scene
 
         canReset = false;
 
+        clouds = new Backdrop("graphics/clouds.png");
+        clouds.alpha = 0.25;
+        addGraphic(clouds, 5);
+
+        cloudsTwo = new Backdrop("graphics/clouds.png");
+        cloudsTwo.alpha = 0.2;
+        addGraphic(cloudsTwo, 4);
+
         addGraphic(new Image("graphics/background.png"), 10);
 
         if(sfx == null) {
             sfx = [
-				"die" => new Sfx("audio/die.ogg"),
 				"drone_high" => new Sfx("audio/drone_high.ogg"),
 				"drone_low" => new Sfx("audio/drone_low.ogg"),
 				"drop1" => new Sfx("audio/drop1.ogg"),
@@ -86,22 +97,20 @@ class GameScene extends Scene
 				"drop5" => new Sfx("audio/drop5.ogg"),
 				"drop6" => new Sfx("audio/drop6.ogg"),
 				"drop7" => new Sfx("audio/drop7.ogg"),
-				"flight" => new Sfx("audio/flight.ogg"),
-				"flight_off" => new Sfx("audio/flight_off.ogg"),
-				"flight_on" => new Sfx("audio/flight_on.ogg"),
 				"ping1" => new Sfx("audio/ping1.ogg"),
 				"ping2" => new Sfx("audio/ping2.ogg"),
 				"ping3" => new Sfx("audio/ping3.ogg"),
 				"ping4" => new Sfx("audio/ping4.ogg"),
 				"ping5" => new Sfx("audio/ping5.ogg"),
-				"rain" => new Sfx("audio/rain.ogg")
+				"rain" => new Sfx("audio/rain.ogg"),
+				"recordset" => new Sfx("audio/recordset.ogg")
             ];
         }
     }
 
     override public function update() {
         if(player.isDead) {
-            if(Input.pressed("up") && canReset) {
+            if(Input.pressed("reset") && canReset) {
                 reset();
             }
             if(totalTime > highScore) {
@@ -117,11 +126,15 @@ class GameScene extends Scene
             totalTime += HXP.elapsed;
             if(totalTime > highScore && oldTotalTime <= highScore && highScore != 0) {
                 scoreDisplay.alpha = 1;
-                sfx["ping1"].play();
+                sfx["recordset"].play(0.75);
             }
             scoreDisplay.text = '${timeRound(totalTime, 0)}';
             scoreDisplay.x = HXP.width / 2 - scoreDisplay.textWidth / 2;
         }
+
+        clouds.y += HXP.elapsed * 100;
+        cloudsTwo.y += HXP.elapsed * 150;
+
         super.update();
     }
 
@@ -131,15 +144,35 @@ class GameScene extends Scene
         for(display in [titleDisplay, tutorialDisplay]) {
             HXP.tween(display, {"alpha": 0}, 0.5);
         }
+        HXP.alarm(0.1, function() {
+            for(sfxName in ["rain", "drone_low", "drone_high"]) {
+                sfx[sfxName].loop(0);
+            }
+            HXP.tween(sfx["rain"], {"volume": 0.5}, 2, Ease.sineInOut);
+        });
+        lowDroneStarter = HXP.alarm(20, function() {
+            HXP.tween(sfx["drone_low"], {"volume": 0.33}, 40, Ease.sineIn);
+        });
+        highDroneStarter = HXP.alarm(40, function() {
+            HXP.tween(sfx["drone_high"], {"volume": 0.33}, 40, Ease.sineIn);
+        });
     }
 
     public function onDeath() {
+        for(sfxName in ["rain", "drone_low", "drone_high"]) {
+            sfx[sfxName].stop();
+            lowDroneStarter.active = false;
+            highDroneStarter.active = false;
+        }
         spawner.active = false;
         HXP.tween(scoreDisplay, {"y": HXP.height / 2 - scoreDisplay.height / 2, "alpha": 1}, 1.5, {ease: Ease.sineInOut, complete: function() {
             scoreDisplay.text = '${timeRound(totalTime, 2)}\n  SECONDS';
             if(totalTime > highScore) {
                 replayPrompt.alpha = 1;
                 sfx["ping2"].play();
+                HXP.alarm(0.25, function() {
+                    canReset = true;
+                });
             }
             else {
                 sfx["ping3"].play();
@@ -162,6 +195,7 @@ class GameScene extends Scene
     public function reset() {
         canReset = false;
         curtain.fadeIn(0.25);
+        sfx["ping5"].play();
         HXP.alarm(0.25, function() {
             HXP.scene = new GameScene();
         });
