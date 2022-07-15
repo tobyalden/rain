@@ -58,7 +58,7 @@ class GameScene extends Scene
         addTween(spawner);
         scoreDisplay = new Text("0", 0, 0, 180, 0);
         scoreDisplay.alpha = 0;
-        titleDisplay = new Text("RAIN", 0, 60, 180, 0, {align: TextAlignType.CENTER});
+        titleDisplay = new Text("RAIN", 0, 58, 180, 0, {align: TextAlignType.CENTER});
         tutorialDisplay = new Text("hold up to fly", 0, 103, 180, 0, {align: TextAlignType.CENTER, size: 12});
         for(display in [scoreDisplay, titleDisplay, tutorialDisplay]) {
             addGraphic(display);
@@ -90,17 +90,8 @@ class GameScene extends Scene
             sfx = [
 				"drone_high" => new Sfx("audio/drone_high.ogg"),
 				"drone_low" => new Sfx("audio/drone_low.ogg"),
-				"drop1" => new Sfx("audio/drop1.ogg"),
-				"drop2" => new Sfx("audio/drop2.ogg"),
-				"drop3" => new Sfx("audio/drop3.ogg"),
-				"drop4" => new Sfx("audio/drop4.ogg"),
-				"drop5" => new Sfx("audio/drop5.ogg"),
-				"drop6" => new Sfx("audio/drop6.ogg"),
-				"drop7" => new Sfx("audio/drop7.ogg"),
-				"ping1" => new Sfx("audio/ping1.ogg"),
 				"ping2" => new Sfx("audio/ping2.ogg"),
 				"ping3" => new Sfx("audio/ping3.ogg"),
-				"ping4" => new Sfx("audio/ping4.ogg"),
 				"ping5" => new Sfx("audio/ping5.ogg"),
 				"rain" => new Sfx("audio/rain.ogg"),
 				"recordset" => new Sfx("audio/recordset.ogg")
